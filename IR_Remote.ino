@@ -110,7 +110,8 @@ String decodeInput(decode_results &results){
 // and return the value once pressed.
 String waitForInput(int maxWaitInMillis){
   String result = "";
-  int maxMillis = millis() + maxWaitInMillis;
+  unsigned long previousMillis = millis();
+  unsigned long currentMillis;
 
   while (result == ""){
     if (irrecv.decode(&irMessage)) {
@@ -119,7 +120,8 @@ String waitForInput(int maxWaitInMillis){
       }
       irrecv.resume(); // Receive the next value 
     }
-    if (millis() >= maxMillis){
+    currentMillis = millis();
+    if(currentMillis - previousMillis >= maxWaitInMillis){
       return result;
     }
   }

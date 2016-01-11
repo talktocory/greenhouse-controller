@@ -16,11 +16,10 @@ const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 // ********************************************************
 // greenhouse variables
 float tempSet, tempAct, humSet, humAct;
-int illumHoursOn, illumHoursOff;
-int waterMinOn, waterMinOff;
-unsigned long lastDisplayUpdate;
-unsigned long pctime;
+int lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm;
+int waterFrqHh, waterDurMm;
 String buttonPressed;
+String currentMenu;
   
 // initialize IR receiver
 IRrecv irrecv(RECV_PIN);
@@ -28,6 +27,25 @@ decode_results irMessage;
 
 // initialize the lcd 
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
+
+// ********************************************************
+//                     Utility Functions 
+// ********************************************************
+void printDigits(int digits){
+  if(digits < 10)
+    lcd.print('0');
+  lcd.print(digits);
+}
+
+void printTime(time_t t){
+  printDigits(hour());
+  lcd.print(":");
+  printDigits(minute());
+  lcd.print(":");
+  printDigits(second());
+}
+
+
 
 // ********************************************************
 //                           Setup
@@ -41,19 +59,74 @@ void setup() {
   irrecv.enableIRIn(); 
 
   // start the serial monitor
-  Serial.begin(9600);
+  // Serial.begin(9600);
 
   // Initialize the clock
   setTime(DEFAULT_TIME);
+
+  // Set system defaults
+  tempSet = 22.0;
+  tempAct = 22.11;
+  humSet = 80.0;
+  humAct = 80.51;
+  lightsOnHh = 6;
+  lightsOnMm = 0;
+  lightsOffHh = 21;
+  lightsOffMm = 00;
+  waterFrqHh = 6;
+  waterDurMm = 3;
+  
+  // Display the main menu
+  currentMenu = "menu_0";
+  
 }
 
 void loop() {
 
-  buttonPressed = waitForInput();
-  lcd.clear();
-  lcd.setCursor(0,0);
-  lcd.print("Button Pressed:");
-  lcd.setCursor(0,1);
-  lcd.print(buttonPressed);
+  // Refresh the display
+  displayMenu(currentMenu); 
+  
+  // Give user 1 second to press button
+  buttonPressed = waitForInput(1000);
+
+  // If menu item was pressed then change
+  // the menu.  Otherwise, redisplay the 
+  // current menu.
+  if (buttonPressed == "Mode"){
+    if (currentMenu.startsWith("menu_0")){
+      currentMenu = "menu_1";
+    } 
+    else if (currentMenu.equals("menu_1")){
+      currentMenu = "menu_2";
+    }
+    else if (currentMenu.equals("menu_2")){
+      currentMenu = "menu_3";
+    }
+    else if (currentMenu.equals("menu_3")){
+      currentMenu = "menu_4";
+    }
+    else if (currentMenu.equals("menu_4")){
+      currentMenu = "menu_5";
+    }
+    else if (currentMenu.equals("menu_5")){
+      currentMenu = "menu_6";
+    }
+    else if (currentMenu.equals("menu_6")){
+      currentMenu = "menu_7";
+    }
+    else if (currentMenu.equals("menu_7")){
+      currentMenu = "menu_8";
+    }
+    else if (currentMenu.equals("menu_8")){
+      currentMenu = "menu_9";
+    }
+    else if (currentMenu.equals("menu_9")){
+      currentMenu = "menu_10";
+    }
+    else if (currentMenu.equals("menu_10")){
+      currentMenu = "menu_0"; 
+    }
+  }
+     
 }
 
