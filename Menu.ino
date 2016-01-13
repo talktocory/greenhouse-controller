@@ -66,7 +66,7 @@ void displayMenu_1(){
   lcd.print("Time hh:      ");
   printDigits(hour());
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Time Settings
@@ -76,7 +76,7 @@ void displayMenu_2(){
   lcd.print("Time mm:      ");
   printDigits(minute());
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Temp Settings
@@ -86,7 +86,7 @@ void displayMenu_3(){
   lcd.print("Temp:       ");
   lcd.print(tempSet, 1);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Hummidity Settings
@@ -96,7 +96,7 @@ void displayMenu_4(){
   lcd.print("Humidity:     ");
   lcd.print(humSet, 0);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Light Settings
@@ -106,7 +106,7 @@ void displayMenu_5(){
   lcd.print("Light On hh:  ");
   printDigits(lightsOffHh);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Light Settings
@@ -116,7 +116,7 @@ void displayMenu_6(){
   lcd.print("Light On mm:  ");
   printDigits(lightsOnMm);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 void displayMenu_7(){
@@ -125,7 +125,7 @@ void displayMenu_7(){
   lcd.print("Light Off hh: ");
   printDigits(lightsOffHh);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Light Settings
@@ -135,7 +135,7 @@ void displayMenu_8(){
   lcd.print("Light Off mm: ");
   printDigits(lightsOffMm);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Water Settings
@@ -145,7 +145,7 @@ void displayMenu_9(){
   lcd.print("Water Frq hh: ");
   printDigits(waterFrqHh);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }
 
 // Water Settings
@@ -155,5 +155,5 @@ void displayMenu_10(){
   lcd.print("Water Dur mm: ");
   printDigits(waterDurMm);
   lcd.setCursor(0, 1);
-  lcd.print("VolUp/VolDwn/Bak");
+  lcd.print("Use + - to Adj");
 }

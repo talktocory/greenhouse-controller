@@ -126,7 +126,69 @@ void loop() {
     else if (currentMenu.equals("menu_10")){
       currentMenu = "menu_0"; 
     }
+  } else if (buttonPressed == "Volume Up"){
+    if (currentMenu.equals("menu_1")){
+      adjustTime(60*60); 
+    }
+    else if (currentMenu.equals("menu_2")){
+      adjustTime(60); 
+    }
+    else if (currentMenu.equals("menu_3")){
+      tempSet += 0.1;
+    }
+    else if (currentMenu.equals("menu_4")){
+      humSet += 1.0;
+    }
+    else if (currentMenu.equals("menu_5")){
+      lightsOffHh++;
+    }
+    else if (currentMenu.equals("menu_6")){
+      lightsOnMm++; 
+    }
+    else if (currentMenu.equals("menu_7")){
+      lightsOffHh++;
+    }
+    else if (currentMenu.equals("menu_8")){
+      lightsOffMm++;
+    }
+    else if (currentMenu.equals("menu_9")){
+      waterFrqHh++;
+    }
+    else if (currentMenu.equals("menu_10")){
+      waterDurMm++;
+    }
+  } else if (buttonPressed == "Volume Down"){
+    if (currentMenu.equals("menu_1")){
+      adjustTime(-60*60); 
+    }
+    else if (currentMenu.equals("menu_2")){
+      adjustTime(-60); 
+    }
+    else if (currentMenu.equals("menu_3")){
+      tempSet -= 0.1;
+    }
+    else if (currentMenu.equals("menu_4")){
+      humSet -= 1.0;
+    }
+    else if (currentMenu.equals("menu_5")){
+      lightsOffHh--;
+    }
+    else if (currentMenu.equals("menu_6")){
+      lightsOnMm--; 
+    }
+    else if (currentMenu.equals("menu_7")){
+      lightsOffHh--;
+    }
+    else if (currentMenu.equals("menu_8")){
+      lightsOffMm--;
+    }m
+    else if (currentMenu.equals("menu_9")){
+      waterFrqHh--;
+    }
+    else if (currentMenu.equals("menu_10")){
+      waterDurMm--;
+    }mm
   }
      
 }
-
+mk
