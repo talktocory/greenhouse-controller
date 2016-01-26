@@ -138,22 +138,22 @@ void displayMenu_8(){
   lcd.print("Use + - to Adj");
 }
 
-// Water Settings
+// Ventilation Settings
 void displayMenu_9(){
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Water Frq hh: ");
-  printDigits(waterFrqHh);
+  lcd.print("Vent Frq hh:  ");
+  printDigits(ventilationFrqHh);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }
 
-// Water Settings
+// Ventilation Settings
 void displayMenu_10(){
   lcd.clear();
   lcd.setCursor(0, 0);
-  lcd.print("Water Dur mm: ");
-  printDigits(waterDurMm);
+  lcd.print("Vent Dur mm: ");
+  printDigits(ventilationDurMm);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }
