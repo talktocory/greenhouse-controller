@@ -26,18 +26,23 @@
 #define RECV_PIN 10 // IR receiver pin
 #define DHTPIN 2
 #define DHTTYPE DHT11
+#define RELAYLIGHTS 3
+#define RELAYHEATER 4
+#define RELAYHUMIDIFIER 5
+#define RELAYVENTILATION 6
+
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 
 // ********************************************************
 //                      Global Variables
 // ********************************************************
 // greenhouse variables
-float tempSet, tempAct, humSet, humAct;
+float tempSet, tempAct, humSet, humAct, sensorValue;
 int lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm;
 int ventilationFrqHh, ventilationDurMm;
+unsigned long lastVentilationStart, nextVentilationStart, nextVentilationEnd;
 String buttonPressed;
 String currentMenu;
-float sensorValue;
 
 // initialize temp/hum sensor
 DHT dht(DHTPIN, DHTTYPE);
@@ -94,12 +99,22 @@ void setup() {
   lightsOnMm = 0;
   lightsOffHh = 21;
   lightsOffMm = 00;
-  ventilationFrqHh = 6;
-  ventilationDurMm = 3;
+  ventilationFrqHh = 1;
+  ventilationDurMm = 15;
+  lastVentilationStart = now();
   
   // Display the main menu
   currentMenu = "menu_0";
-  
+
+  // Setup Relays
+  pinMode(RELAYLIGHTS, OUTPUT);
+  pinMode(RELAYHEATER, OUTPUT);
+  pinMode(RELAYHUMIDIFIER, OUTPUT);
+  pinMode(RELAYVENTILATION, OUTPUT);
+  digitalWrite(RELAYLIGHTS, LOW);
+  digitalWrite(RELAYHEATER, LOW);
+  digitalWrite(RELAYHUMIDIFIER, LOW);
+  digitalWrite(RELAYVENTILATION, LOW);
 }
 
 void loop() {
@@ -221,5 +236,38 @@ void loop() {
     humAct = sensorValue;
   }
 
-  
+  // Adjust Lights
+  if ((hour() >= lightsOnHh) 
+      && (minute() >= lightsOnMm) 
+      && (hour() < lightsOffHh) 
+      && (minute() < lightsOffMm)){
+    digitalWrite(RELAYLIGHTS, HIGH);   
+  } else {
+    digitalWrite(RELAYLIGHTS, LOW);   
+  }
+
+  // Adjust Humidity
+  if (humAct < humSet){
+    digitalWrite(RELAYHUMIDIFIER, HIGH);   
+  } else {
+    digitalWrite(RELAYHUMIDIFIER, LOW);   
+  }
+
+  // Adjust Heater
+  if (tempAct < tempSet){
+    digitalWrite(RELAYHEATER, HIGH);   
+  } else {
+    digitalWrite(RELAYHEATER, LOW);   
+  }
+
+  // Adjust Ventilation
+  nextVentilationStart = lastVentilationStart + ventilationFrqHh * 60 * 60;
+  nextVentilationEnd = nextVentilationStart + ventilationDurMm * 60;
+  if ((now() > nextVentilationStart) && (now() < nextVentilationEnd)){
+    lastVentilationStart = nextVentilationStart;
+    digitalWrite(RELAYVENTILATION, HIGH);
+  } else {
+    digitalWrite(RELAYVENTILATION, LOW);
+  }
+
 }

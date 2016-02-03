@@ -133,7 +133,6 @@ void displayMenu_8(){
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Light Off mm: ");
-  printDigits(lightsOffMm);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }
