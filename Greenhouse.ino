@@ -1,3 +1,6 @@
+// see: https://learn.adafruit.com/dht/using-a-dhtxx-sensor
+#include <DHT.h>
+
 /* YourDuino.com Example Software Sketch
  20 character 4 line I2C Display
  Backpack Interface labelled "YwRobot Arduino LCM1602 IIC V1"
@@ -20,7 +23,9 @@
 // ********************************************************
 //                         Constants
 // ********************************************************
-int RECV_PIN = 10; // IR receiver pin
+#define RECV_PIN 10 // IR receiver pin
+#define DHTPIN 2
+#define DHTTYPE DHT11
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
 
 // ********************************************************
@@ -32,7 +37,11 @@ int lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm;
 int ventilationFrqHh, ventilationDurMm;
 String buttonPressed;
 String currentMenu;
-  
+float sensorValue;
+
+// initialize temp/hum sensor
+DHT dht(DHTPIN, DHTTYPE);
+
 // initialize IR receiver
 IRrecv irrecv(RECV_PIN);
 decode_results irMessage;
@@ -78,9 +87,9 @@ void setup() {
 
   // Set system defaults
   tempSet = 22.0;
-  tempAct = 22.11;
+  tempAct = tempSet;
   humSet = 80.0;
-  humAct = 80.51;
+  humAct = humSet;
   lightsOnHh = 6;
   lightsOnMm = 0;
   lightsOffHh = 21;
@@ -201,5 +210,16 @@ void loop() {
       ventilationDurMm--;
     }
   }
-     
+
+  // Read temp and humidity
+  sensorValue = dht.readTemperature();
+  if (!isnan(sensorValue)){
+    tempAct = sensorValue;
+  }
+  sensorValue = dht.readHumidity();
+  if (!isnan(sensorValue)){
+    humAct = sensorValue;
+  }
+
+  
 }
