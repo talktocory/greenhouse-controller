@@ -27,8 +27,8 @@
 #define DHTPIN 2
 #define DHTTYPE DHT11
 #define RELAYLIGHTS 3
-#define RELAYHEATER 4
-#define RELAYHUMIDIFIER 5
+#define RELAYHEATER 5
+#define RELAYHUMIDIFIER 4
 #define RELAYVENTILATION 6
 
 const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
@@ -85,7 +85,7 @@ void setup() {
   irrecv.enableIRIn(); 
 
   // start the serial monitor
-  // Serial.begin(9600);
+  Serial.begin(9600);
 
   // Initialize the clock
   setTime(DEFAULT_TIME);
@@ -93,12 +93,12 @@ void setup() {
   // Set system defaults
   tempSet = 22.0;
   tempAct = tempSet;
-  humSet = 80.0;
+  humSet = 60.0;
   humAct = humSet;
   lightsOnHh = 6;
   lightsOnMm = 0;
   lightsOffHh = 21;
-  lightsOffMm = 00;
+  lightsOffMm = 0;
   ventilationFrqHh = 1;
   ventilationDurMm = 15;
   lastVentilationStart = now();
@@ -111,10 +111,10 @@ void setup() {
   pinMode(RELAYHEATER, OUTPUT);
   pinMode(RELAYHUMIDIFIER, OUTPUT);
   pinMode(RELAYVENTILATION, OUTPUT);
-  digitalWrite(RELAYLIGHTS, LOW);
-  digitalWrite(RELAYHEATER, LOW);
-  digitalWrite(RELAYHUMIDIFIER, LOW);
-  digitalWrite(RELAYVENTILATION, LOW);
+  digitalWrite(RELAYLIGHTS, HIGH);
+  digitalWrite(RELAYHEATER, HIGH);
+  digitalWrite(RELAYHUMIDIFIER, HIGH);
+  digitalWrite(RELAYVENTILATION, HIGH);
 }
 
 void loop() {
@@ -237,27 +237,25 @@ void loop() {
   }
 
   // Adjust Lights
-  if ((hour() >= lightsOnHh) 
-      && (minute() >= lightsOnMm) 
-      && (hour() < lightsOffHh) 
-      && (minute() < lightsOffMm)){
-    digitalWrite(RELAYLIGHTS, HIGH);   
+  if (InTimeSpan(lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm)) {
+    digitalWrite(RELAYLIGHTS, LOW); 
   } else {
-    digitalWrite(RELAYLIGHTS, LOW);   
+    digitalWrite(RELAYLIGHTS, HIGH);   
   }
 
   // Adjust Humidity
-  if (humAct < humSet){
-    digitalWrite(RELAYHUMIDIFIER, HIGH);   
-  } else {
+ 
+  if ((humAct + 5) < humSet){
     digitalWrite(RELAYHUMIDIFIER, LOW);   
+  } else if ((humAct - 5) > humSet) {
+    digitalWrite(RELAYHUMIDIFIER, HIGH);   
   }
 
   // Adjust Heater
-  if (tempAct < tempSet){
-    digitalWrite(RELAYHEATER, HIGH);   
-  } else {
+  if ((tempAct + 2) < tempSet){
     digitalWrite(RELAYHEATER, LOW);   
+  } else if ((tempAct - 2) > tempSet) {
+    digitalWrite(RELAYHEATER, HIGH);   
   }
 
   // Adjust Ventilation
@@ -265,9 +263,9 @@ void loop() {
   nextVentilationEnd = nextVentilationStart + ventilationDurMm * 60;
   if ((now() > nextVentilationStart) && (now() < nextVentilationEnd)){
     lastVentilationStart = nextVentilationStart;
-    digitalWrite(RELAYVENTILATION, HIGH);
-  } else {
     digitalWrite(RELAYVENTILATION, LOW);
+  } else {
+    digitalWrite(RELAYVENTILATION, HIGH);
   }
 
 }
