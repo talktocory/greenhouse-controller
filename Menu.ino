@@ -104,7 +104,7 @@ void displayMenu_5(){
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Light On hh:  ");
-  printDigits(lightsOffHh);
+  printDigits(lightsOnHh);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }
