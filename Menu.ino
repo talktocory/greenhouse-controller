@@ -49,14 +49,31 @@ void displayMenu(String newMenu){
 // Home screen displays time, humidity and temp
 void displayMenu_0(){
   lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Time:   ");
-  printTime(now());
-  lcd.setCursor(0, 1);
-  lcd.print("T: ");
-  lcd.print(tempAct, 2);
-  lcd.print(" H: ");
-  lcd.print(humAct, 1);
+
+  if (RTC.read(tm)) {
+    lcd.setCursor(0, 0);
+    lcd.print("Time:   ");
+    printDigits(tm.Hour);
+    lcd.print(':');
+    printDigits(tm.Minute);
+    lcd.print(':');
+    printDigits(tm.Second);
+    lcd.setCursor(0, 1);
+    lcd.print("T: ");
+    lcd.print(tempAct, 2);
+    lcd.print(" H: ");
+    lcd.print(humAct, 1);
+  }  else {
+    if (RTC.chipPresent()) {
+      // Serial.println("The DS1307 is stopped.  Please run the SetTime");
+      // Serial.println("example to initialize the time and begin running.");
+      // Serial.println();
+    } else {
+      // Serial.println("DS1307 read error!  Please check the circuitry.");
+      // Serial.println();
+    }
+  }
+
 }
 
 // Time Settings
@@ -64,7 +81,7 @@ void displayMenu_1(){
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Time hh:      ");
-  printDigits(hour());
+  printDigits(tm.Hour);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }
@@ -74,7 +91,7 @@ void displayMenu_2(){
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Time mm:      ");
-  printDigits(minute());
+  printDigits(tm.Minute);
   lcd.setCursor(0, 1);
   lcd.print("Use + - to Adj");
 }

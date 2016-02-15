@@ -1,14 +1,8 @@
 // see: https://learn.adafruit.com/dht/using-a-dhtxx-sensor
 #include <DHT.h>
 
-/* YourDuino.com Example Software Sketch
- 20 character 4 line I2C Display
- Backpack Interface labelled "YwRobot Arduino LCM1602 IIC V1"
- Connect Vcc and Ground, SDA to A4, SCL to A5 on Arduino
- terry@yourduino.com */
-
-/*-----( Import needed libraries )-----*/
 #include <Wire.h>  // Comes with Arduino IDE
+
 // Get the LCD I2C Library here: 
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads
 // Move any other LCD libraries to another folder or delete them
@@ -17,6 +11,8 @@
 
 #include <Time.h>
 #include <TimeLib.h>
+#include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
+
 #include <IRremote.h>
 #include <IRremoteInt.h>
 
@@ -31,7 +27,10 @@
 #define RELAYHUMIDIFIER 4
 #define RELAYVENTILATION 6
 
-const unsigned long DEFAULT_TIME = 1357041600; // Jan 1 2013
+const char *monthName[12] = {
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+};
 
 // ********************************************************
 //                      Global Variables
@@ -43,17 +42,28 @@ int ventilationFrqHh, ventilationDurMm;
 unsigned long lastVentilationStart, nextVentilationStart, nextVentilationEnd;
 String buttonPressed;
 String currentMenu;
-
-// initialize temp/hum sensor
+tmElements_t tm;
+  
+/* initialize temp/hum sensor
+ *  SDA - ANALOG Pin 4
+ *  SCL - ANALOG pin 5
+*/
 DHT dht(DHTPIN, DHTTYPE);
 
 // initialize IR receiver
+// Digital pin 2
 IRrecv irrecv(RECV_PIN);
 decode_results irMessage;
 
 // set the LCD address to 0x27 for a 20 chars 4 line display
 // Set the pins on the I2C chip used for LCD connections:
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
+// see: https://arduino-info.wikispaces.com/LCD-Blue-I2C
+/*
+ * SDA - ANALOG Pin 4
+ * SCL - ANALOG pin 5
+ * On most Arduino boards, SDA (data line) is on analog input pin 4, and SCL (clock line) is on analog input pin 5
+*/
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
 
 // ********************************************************
@@ -64,15 +74,33 @@ void printDigits(int digits){
     lcd.print('0');
   lcd.print(digits);
 }
+bool getTime(const char *str)
+{
+  int Hour, Min, Sec;
 
-void printTime(time_t t){
-  printDigits(hour());
-  lcd.print(":");
-  printDigits(minute());
-  lcd.print(":");
-  printDigits(second());
+  if (sscanf(str, "%d:%d:%d", &Hour, &Min, &Sec) != 3) return false;
+  tm.Hour = Hour;
+  tm.Minute = Min;
+  tm.Second = Sec;
+  return true;
 }
 
+bool getDate(const char *str)
+{
+  char Month[12];
+  int Day, Year;
+  uint8_t monthIndex;
+
+  if (sscanf(str, "%s %d %d", Month, &Day, &Year) != 3) return false;
+  for (monthIndex = 0; monthIndex < 12; monthIndex++) {
+    if (strcmp(Month, monthName[monthIndex]) == 0) break;
+  }
+  if (monthIndex >= 12) return false;
+  tm.Day = Day;
+  tm.Month = monthIndex + 1;
+  tm.Year = CalendarYrToTm(Year);
+  return true;
+}
 // ********************************************************
 //                           Setup
 // ********************************************************
@@ -84,12 +112,20 @@ void setup() {
   // start the ir receiver
   irrecv.enableIRIn(); 
 
-  // start the serial monitor
-  Serial.begin(9600);
-
-  // Initialize the clock
-  setTime(DEFAULT_TIME);
-
+  // start the // Serial monitor
+  // Serial.begin(9600);
+  // while (!Serial) ; // wait for Arduino // Serial Monitor
+  setSyncProvider(RTC.get);   // the function to get the time from the RTC
+  if(timeStatus()!= timeSet) {
+    // Serial.println("Date and time not set.  Setting it to last compile time."); 
+    // get the date and time the compiler was run
+    if (getDate(__DATE__) && getTime(__TIME__)) {
+      RTC.write(tm);
+    }
+  } else {
+    // Serial.println("RTC has set the system time");     
+  }
+  
   // Set system defaults
   tempSet = 22.0;
   tempAct = tempSet;
@@ -97,7 +133,7 @@ void setup() {
   humAct = humSet;
   lightsOnHh = 6;
   lightsOnMm = 0;
-  lightsOffHh = 21;
+  lightsOffHh = 22;
   lightsOffMm = 0;
   ventilationFrqHh = 1;
   ventilationDurMm = 15;
@@ -164,10 +200,12 @@ void loop() {
     }
   } else if (buttonPressed == "Volume Up"){
     if (currentMenu.equals("menu_1")){
-      adjustTime(60*60); 
+      tm.Hour = tm.Hour + 1;
+      RTC.write(tm);
     }
     else if (currentMenu.equals("menu_2")){
-      adjustTime(60); 
+      tm.Minute = tm.Minute + 1;
+      RTC.write(tm);
     }
     else if (currentMenu.equals("menu_3")){
       tempSet += 0.1;
@@ -195,10 +233,12 @@ void loop() {
     }
   } else if (buttonPressed == "Volume Down"){
     if (currentMenu.equals("menu_1")){
-      adjustTime(-60*60); 
+      tm.Hour = tm.Hour - 1;
+      RTC.write(tm);
     }
     else if (currentMenu.equals("menu_2")){
-      adjustTime(-60); 
+      tm.Minute = tm.Minute - 1;
+      RTC.write(tm);
     }
     else if (currentMenu.equals("menu_3")){
       tempSet -= 0.1;
