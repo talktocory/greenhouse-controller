@@ -7,7 +7,7 @@ boolean InTimeSpan(int startHh, int startMm, int stopHh, int stopMm){
   long stopTimeInSeconds = (long) stopHh * 60 * 60 + (long) stopMm * 60;
   // // Serial.print("Stop time in seconds: ");
   // // Serial.println(stopTimeInSeconds);
-  long currentTimeInSeconds = (long) hour() * 60 * 60 + (long) minute() * 60;
+  long currentTimeInSeconds = (long) tm.Hour * 60 * 60 + (long) tm.Minute * 60;
   // // Serial.print("Current time in seconds: ");
   // // Serial.println(currentTimeInSeconds);
     
