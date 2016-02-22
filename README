@@ -1,0 +1,33 @@
+(DiY) Arduino Powered Ammo Box Greenhouse Controller
+
+The companion video for this Arduino sketch can be found here:
+https://www.youtube.com/watch?v=KjPOGInt5jc
+
+Major Hardware Components:
+- DHT11 Temperature and Humidity Sensor
+  http://www.amazon.ca/SODIAL-Digital-Humidity-Temperature-Arduino/dp/B00K67YJ18/ref=sr_1_2?ie=UTF8&qid=1456182208&sr=8-2&keywords=dht11
+  
+- 16x2 I2C Compatible LCD Display
+  http://www.amazon.ca/Puuli-Serial-Interface-Character-Display/dp/B017GL1UYK/ref=sr_1_1?ie=UTF8&qid=1456182269&sr=8-1&keywords=16x2+i2c
+  
+- Arduino Protoshield
+  http://www.amazon.ca/Adafruit-Proto-Shield-Arduino-Kit/dp/B00N426HCG/ref=sr_1_1?ie=UTF8&qid=1456182322&sr=8-1&keywords=arduino+proto+shield
+  
+- Arduino UNO
+  http://www.amazon.ca/Arduino-A000066-Uno-R3-Microcontroller/dp/B008GRTSV6/ref=sr_1_1?ie=UTF8&qid=1456182355&sr=8-1&keywords=arduino+uno
+  
+- 30 Calibre Ammo Box
+  http://www.princessauto.com/en/detail/30-calibre-ammo-box/A-p8145732e
+  
+- 2 x Wiremold 2 Gang Old Work Electrical Box
+  https://www.lowes.ca/electrical-box/wiremold-nmw3-2-double-gang-old-work-electrical-box_g1189922.html?searchTerm=wiremold-2-gang
+
+- Terminal Block
+  http://www.amazon.ca/Gardner-Bender-GTB-408-Terminal-Block/dp/B002YLPJ6I/ref=sr_1_15?s=electronics&ie=UTF8&qid=1456182620&sr=1-15&keywords=terminal+block
+  
+Other Items:
+- Marrets
+- Solder
+- CAT 5 network cable
+- Drill point screws
+- Screw down electrical conduit connector
