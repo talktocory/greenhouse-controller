@@ -1,20 +1,32 @@
-// see: https://learn.adafruit.com/dht/using-a-dhtxx-sensor
-#include <DHT.h>
 
-#include <Wire.h>  // Comes with Arduino IDE
+// You must install the following 3rd party utility in your IDE
+// to compile this sketch
+//
+// Sketch→Include Library→Manage Libraries…
+//
+// - Wire (Comes with Arduino IDE)
+// - DHT Sensor Library by Adafruit (see: https://learn.adafruit.com/dht/using-a-dhtxx-sensor)
+// - Adafruit Unified Sensor Library
+// - Time by Michael Margolis
+// - DS1307RTC by Michael Margolis (a basic DS1307 library that returns time as a time_t)
+// - IRremote by Shirriff
+//
+#include <Wire.h>  
+#include <DHT.h>
+#include <DHT_U.h>
+#include <Time.h>
+#include <TimeLib.h>
+#include <DS1307RTC.h>
+#include <IRremote.h>
+#include <IRremoteInt.h>
 
 // Get the LCD I2C Library here: 
 // https://bitbucket.org/fmalpartida/new-liquidcrystal/downloads
-// Move any other LCD libraries to another folder or delete them
-// See Library "Docs" folder for possible commands etc.
+// 
+// Sketch→Include Library→Manage Libraries…
+// - NewLiquidCrystal_1.5.1.zip
+//
 #include <LiquidCrystal_I2C.h>
-
-#include <Time.h>
-#include <TimeLib.h>
-#include <DS1307RTC.h>  // a basic DS1307 library that returns time as a time_t
-
-#include <IRremote.h>
-#include <IRremoteInt.h>
 
 // ********************************************************
 //                         Constants
@@ -24,8 +36,7 @@
 #define DHTTYPE DHT11
 #define RELAYLIGHTS 3
 #define RELAYHEATER 5
-#define RELAYHUMIDIFIER 4
-#define RELAYVENTILATION 6
+#define RELAYPUMP 4
 
 const char *monthName[12] = {
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -36,18 +47,17 @@ const char *monthName[12] = {
 //                      Global Variables
 // ********************************************************
 // greenhouse variables
-float tempSet, tempAct, humSet, humAct, sensorValue;
+float tempSet, tempAct, humAct, sensorValue;
 int lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm;
-int ventilationFrqHh, ventilationDurMm;
-unsigned long lastVentilationStart, nextVentilationStart, nextVentilationEnd;
+int pumpFrqHh, pumpDurMm;
+unsigned long lastPumpStart, nextPumpStart, nextPumpEnd;
 String buttonPressed;
 String currentMenu;
 tmElements_t tm;
   
-/* initialize temp/hum sensor
- *  SDA - ANALOG Pin 4
- *  SCL - ANALOG pin 5
-*/
+// initialize temp/hum sensor
+// SDA - ANALOG Pin 4
+// SCL - ANALOG Pin 5
 DHT dht(DHTPIN, DHTTYPE);
 
 // initialize IR receiver
@@ -59,11 +69,9 @@ decode_results irMessage;
 // Set the pins on the I2C chip used for LCD connections:
 //                    addr, en,rw,rs,d4,d5,d6,d7,bl,blpol
 // see: https://arduino-info.wikispaces.com/LCD-Blue-I2C
-/*
- * SDA - ANALOG Pin 4
- * SCL - ANALOG pin 5
- * On most Arduino boards, SDA (data line) is on analog input pin 4, and SCL (clock line) is on analog input pin 5
-*/
+// SDA - ANALOG Pin 4
+// SCL - ANALOG Pin 55
+// On most Arduino boards, SDA (data line) is on analog input pin 4, and SCL (clock line) is on analog input pin 5
 LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);  // Set the LCD I2C address
 
 // ********************************************************
@@ -74,6 +82,7 @@ void printDigits(int digits){
     lcd.print('0');
   lcd.print(digits);
 }
+
 bool getTime(const char *str)
 {
   int Hour, Min, Sec;
@@ -105,39 +114,41 @@ bool getDate(const char *str)
 //                           Setup
 // ********************************************************
 void setup() {
+  
+  // setup the serial monitor for debugging purposes
+  Serial.begin(9600);
+  Serial.println("Initializing Greenhouse Controller...");
+  
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
   lcd.clear();
   
   // start the ir receiver
   irrecv.enableIRIn(); 
-
-  // start the // Serial monitor
-  // Serial.begin(9600);
-  // while (!Serial) ; // wait for Arduino // Serial Monitor
-  setSyncProvider(RTC.get);   // the function to get the time from the RTC
+  
+  // the function to get the time from the RTC
+  setSyncProvider(RTC.get);   
   if(timeStatus()!= timeSet) {
-    // Serial.println("Date and time not set.  Setting it to last compile time."); 
+    Serial.println("Date and time not set.  Setting it to last compile time."); 
     // get the date and time the compiler was run
     if (getDate(__DATE__) && getTime(__TIME__)) {
       RTC.write(tm);
     }
   } else {
-    // Serial.println("RTC has set the system time");     
+    Serial.println("RTC has retained its system time");     
   }
   
   // Set system defaults
-  tempSet = 22.0;
-  tempAct = tempSet;
-  humSet = 60.0;
-  humAct = humSet;
+  tempSet = 28.0;
+  tempAct = 22.0;
+  humAct = 80.0;
   lightsOnHh = 6;
   lightsOnMm = 0;
   lightsOffHh = 22;
   lightsOffMm = 0;
-  ventilationFrqHh = 1;
-  ventilationDurMm = 15;
-  lastVentilationStart = now();
+  pumpFrqHh = 12;
+  pumpDurMm = 5;
+  lastPumpStart = now();  // Returns the number of seconds since Jan 1 1970.
   
   // Display the main menu
   currentMenu = "menu_0";
@@ -145,16 +156,16 @@ void setup() {
   // Setup Relays
   pinMode(RELAYLIGHTS, OUTPUT);
   pinMode(RELAYHEATER, OUTPUT);
-  pinMode(RELAYHUMIDIFIER, OUTPUT);
-  pinMode(RELAYVENTILATION, OUTPUT);
+  pinMode(RELAYPUMP, OUTPUT);
   digitalWrite(RELAYLIGHTS, HIGH);
   digitalWrite(RELAYHEATER, HIGH);
-  digitalWrite(RELAYHUMIDIFIER, HIGH);
-  digitalWrite(RELAYVENTILATION, HIGH);
+  digitalWrite(RELAYPUMP, HIGH);
+  
+  Serial.println("Initialization complete.");
 }
 
 void loop() {
-
+  
   // Refresh the display
   displayMenu(currentMenu); 
   
@@ -175,9 +186,6 @@ void loop() {
       currentMenu = "menu_3";
     }
     else if (currentMenu.equals("menu_3")){
-      currentMenu = "menu_4";
-    }
-    else if (currentMenu.equals("menu_4")){
       currentMenu = "menu_5";
     }
     else if (currentMenu.equals("menu_5")){
@@ -210,9 +218,6 @@ void loop() {
     else if (currentMenu.equals("menu_3")){
       tempSet += 0.1;
     }
-    else if (currentMenu.equals("menu_4")){
-      humSet += 1.0;
-    }
     else if (currentMenu.equals("menu_5")){
       lightsOffHh++;
     }
@@ -226,10 +231,10 @@ void loop() {
       lightsOffMm++;
     }
     else if (currentMenu.equals("menu_9")){
-      ventilationFrqHh++;
+      pumpFrqHh++;
     }
     else if (currentMenu.equals("menu_10")){
-      ventilationDurMm++;
+      pumpDurMm++;
     }
   } else if (buttonPressed == "Volume Down"){
     if (currentMenu.equals("menu_1")){
@@ -242,9 +247,6 @@ void loop() {
     }
     else if (currentMenu.equals("menu_3")){
       tempSet -= 0.1;
-    }
-    else if (currentMenu.equals("menu_4")){
-      humSet -= 1.0;
     }
     else if (currentMenu.equals("menu_5")){
       lightsOffHh--;
@@ -259,53 +261,47 @@ void loop() {
       lightsOffMm--;
     }
     else if (currentMenu.equals("menu_9")){
-      ventilationFrqHh--;
+      pumpFrqHh--;
     }
     else if (currentMenu.equals("menu_10")){
-      ventilationDurMm--;
+      pumpDurMm--;
     }
   }
 
-  // Read temp and humidity
-  sensorValue = dht.readTemperature();
-  if (!isnan(sensorValue)){
-    tempAct = sensorValue;
-  }
-  sensorValue = dht.readHumidity();
-  if (!isnan(sensorValue)){
-    humAct = sensorValue;
-  }
+//  // Read temp and humidity
+//  sensorValue = dht.readTemperature();
+//  if (!isnan(sensorValue)){
+//    tempAct = sensorValue;
+//  }
+//  sensorValue = dht.readHumidity();
+//  if (!isnan(sensorValue)){
+//    humAct = sensorValue;
+//  }
 
   // Adjust Lights
   if (InTimeSpan(lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm)) {
     digitalWrite(RELAYLIGHTS, LOW); 
   } else {
-    digitalWrite(RELAYLIGHTS, HIGH);   
-  }
-
-  // Adjust Humidity
- 
-  if ((humAct + 5) < humSet){
-    digitalWrite(RELAYHUMIDIFIER, LOW);   
-  } else if ((humAct - 5) > humSet) {
-    digitalWrite(RELAYHUMIDIFIER, HIGH);   
+    digitalWrite(RELAYLIGHTS, HIGH);
   }
 
   // Adjust Heater
   if ((tempAct + 2) < tempSet){
-    digitalWrite(RELAYHEATER, LOW);   
+    digitalWrite(RELAYHEATER, LOW);
+    Serial.println("Heater off.");
   } else if ((tempAct - 2) > tempSet) {
     digitalWrite(RELAYHEATER, HIGH);   
+    Serial.println("Heater on.");
   }
 
-  // Adjust Ventilation
-  nextVentilationStart = lastVentilationStart + ventilationFrqHh * 60 * 60;
-  nextVentilationEnd = nextVentilationStart + ventilationDurMm * 60;
-  if ((now() > nextVentilationStart) && (now() < nextVentilationEnd)){
-    lastVentilationStart = nextVentilationStart;
-    digitalWrite(RELAYVENTILATION, LOW);
-  } else {
-    digitalWrite(RELAYVENTILATION, HIGH);
-  }
+//  // Adjust Pump
+//  nextPumpStart = lastPumpStart + pumpFrqHh * 60 * 60;
+//  nextPumpEnd = nextPumpStart + pumpDurMm * 60;
+//  if ((now() > nextPumpStart) && (now() < nextPumpEnd)){
+//    lastPumpStart = nextPumpStart;
+//    digitalWrite(RELAYPUMP, LOW);
+//  } else {
+//    digitalWrite(RELAYPUMP, HIGH);
+//  }
 
 }
