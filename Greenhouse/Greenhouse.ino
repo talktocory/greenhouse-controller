@@ -117,7 +117,7 @@ void setup() {
   
   // setup the serial monitor for debugging purposes
   Serial.begin(9600);
-  Serial.println("Initializing Greenhouse Controller...");
+  // Serial.println("Initializing Greenhouse Controller...");
   
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
@@ -129,24 +129,24 @@ void setup() {
   // the function to get the time from the RTC
   setSyncProvider(RTC.get);   
   if(timeStatus()!= timeSet) {
-    Serial.println("Date and time not set.  Setting it to last compile time."); 
+    // Serial.println("Date and time not set.  Setting it to last compile time."); 
     // get the date and time the compiler was run
     if (getDate(__DATE__) && getTime(__TIME__)) {
       RTC.write(tm);
     }
   } else {
-    Serial.println("RTC has retained its system time");     
+    // Serial.println("RTC has retained its system time");     
   }
   
   // Set system defaults
-  tempSet = 28.0;
+  tempSet = 22.0;
   tempAct = 22.0;
   humAct = 80.0;
   lightsOnHh = 6;
   lightsOnMm = 0;
   lightsOffHh = 22;
   lightsOffMm = 0;
-  pumpFrqHh = 12;
+  pumpFrqHh = 6;
   pumpDurMm = 5;
   lastPumpStart = now();  // Returns the number of seconds since Jan 1 1970.
   
@@ -268,40 +268,44 @@ void loop() {
     }
   }
 
-//  // Read temp and humidity
-//  sensorValue = dht.readTemperature();
-//  if (!isnan(sensorValue)){
-//    tempAct = sensorValue;
-//  }
-//  sensorValue = dht.readHumidity();
-//  if (!isnan(sensorValue)){
-//    humAct = sensorValue;
-//  }
-
+  // Read temp and humidity
+  sensorValue = dht.readTemperature();
+  if (!isnan(sensorValue)){
+    tempAct = sensorValue;
+  }
+  sensorValue = dht.readHumidity();
+  if (!isnan(sensorValue)){
+    humAct = sensorValue;
+  }
+  
   // Adjust Lights
   if (InTimeSpan(lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm)) {
     digitalWrite(RELAYLIGHTS, LOW); 
+    // Serial.println("Lights on.");
   } else {
     digitalWrite(RELAYLIGHTS, HIGH);
+    // Serial.println("Lights off.");
   }
 
   // Adjust Heater
   if ((tempAct + 2) < tempSet){
     digitalWrite(RELAYHEATER, LOW);
-    Serial.println("Heater off.");
+    // Serial.println("Heater on.");
   } else if ((tempAct - 2) > tempSet) {
     digitalWrite(RELAYHEATER, HIGH);   
-    Serial.println("Heater on.");
+    // Serial.println("Heater off.");
   }
 
-//  // Adjust Pump
-//  nextPumpStart = lastPumpStart + pumpFrqHh * 60 * 60;
-//  nextPumpEnd = nextPumpStart + pumpDurMm * 60;
-//  if ((now() > nextPumpStart) && (now() < nextPumpEnd)){
-//    lastPumpStart = nextPumpStart;
-//    digitalWrite(RELAYPUMP, LOW);
-//  } else {
-//    digitalWrite(RELAYPUMP, HIGH);
-//  }
+  // Adjust Pump
+  nextPumpStart = lastPumpStart + pumpFrqHh * 60 * 60;
+  nextPumpEnd = nextPumpStart + pumpDurMm * 60;
+  if ((now() > nextPumpStart) && (now() < nextPumpEnd)){
+    if (InTimeSpan(lightsOnHh, lightsOnMm, lightsOffHh, lightsOffMm)){ // Only turn pumps on during light cycles
+      lastPumpStart = nextPumpStart;
+      digitalWrite(RELAYPUMP, LOW); 
+    }
+  } else {
+    digitalWrite(RELAYPUMP, HIGH);
+  }
 
 }
